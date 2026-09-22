@@ -1,4 +1,4 @@
-# auth — Core Logic & Auth (Ольга)
+# auth — Core Logic & Auth (Володимир)
 Модель `users` (з роллю-enum на 6 ролей), реєстрація, логін,
 хешування паролів (bcrypt/argon2), JWT, перевірка прав за роллю.
 
