@@ -5,7 +5,7 @@
 ## Стек
 - **Backend:** FastAPI + SQLAlchemy (+ Alembic для міграцій)
 - **DB:** PostgreSQL 16
-- **Frontend:** _не визначено (тека `frontend/` — плейсхолдер)
+- **Frontend:** React + Vite + React Router (CSS)
 - **Інфраструктура:** Docker Compose
 
 ## Запуск (backend + db)
