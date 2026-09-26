@@ -1,9 +1,16 @@
 fastapi
 uvicorn[standard]
-sqlalchemy
+# 2.1 за замовчуванням шукає драйвер psycopg (v3), а в нас psycopg2
+sqlalchemy>=2.0,<2.1
 alembic
 psycopg2-binary
 pydantic-settings
 passlib[bcrypt]
+# passlib 1.7.4 несумісний з bcrypt>=4.1 (а з 5.x хешування падає)
+bcrypt==4.0.1
 pyjwt
 python-multipart
+email-validator
+# тести
+pytest
+httpx2

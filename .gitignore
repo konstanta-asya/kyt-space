@@ -12,4 +12,5 @@ dist/
 # IDE
 .vscode/
 .idea/
+.run/
 .DS_Store
