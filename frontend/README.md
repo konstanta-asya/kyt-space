@@ -1,2 +1,2 @@
-# frontend — стек НЕ визначено
+# React + Vite + React Router (CSS)
 
