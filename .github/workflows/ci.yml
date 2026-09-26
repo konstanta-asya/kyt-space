@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install ruff==0.16.9
+      - run: ruff check .
+      - run: ruff format --check .
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:16
+        env:
+          POSTGRES_USER: kyt
+          POSTGRES_PASSWORD: kyt
+          POSTGRES_DB: kyt_space
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kyt"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://kyt:kyt@localhost:5432/kyt_space
+      JWT_SECRET: ci-secret-at-least-32-bytes-long-000000
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r requirements.txt
+      # Тести з'являються разом із feat/auth-module; до того крок пропускається.
+      - if: hashFiles('backend/tests/**/test_*.py') != ''
+        run: pytest -q

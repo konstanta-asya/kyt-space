@@ -13,3 +13,6 @@ dist/
 .vscode/
 .idea/
 .DS_Store
+
+# Claude Code: особисті налаштування (спільні — у .claude/settings.json)
+.claude/settings.local.json
