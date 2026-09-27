@@ -10,6 +10,7 @@ from app.core.db import Base
 # Кожну нову модель у майбутньому додавайте сюди рядком import.
 from app.modules.auth import models as _auth_models  # noqa: F401
 from app.modules.rooms import models as _rooms_models  # noqa: F401
+from app.modules.equipment import models as _equipment_models  # noqa: F401
 
 config = context.config
 # Беремо адресу БД з нашого конфігу (.env), а не з alembic.ini:
