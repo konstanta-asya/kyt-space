@@ -12,6 +12,7 @@ dist/
 # IDE
 .vscode/
 .idea/
+.run/
 .DS_Store
 
 # Claude Code: особисті налаштування (спільні — у .claude/settings.json)
