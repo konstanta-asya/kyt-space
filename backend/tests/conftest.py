@@ -3,6 +3,7 @@
 Схема створюється один раз на сесію, а кожен тест працює всередині
 транзакції, яку в кінці відкочуємо, тож тести не бачать дані один одного.
 """
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
@@ -15,9 +16,7 @@ from app.main import app
 from app.modules.auth import models as _auth_models  # noqa: F401 — реєструє таблиці в Base
 from app.modules.rooms import models as _rooms_models  # noqa: F401
 
-TEST_DB_URL = make_url(settings.database_url).set(
-    database=f"{make_url(settings.database_url).database}_test"
-)
+TEST_DB_URL = make_url(settings.database_url).set(database=f"{make_url(settings.database_url).database}_test")
 
 
 @pytest.fixture(scope="session")

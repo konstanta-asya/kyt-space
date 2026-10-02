@@ -13,4 +13,6 @@ python-multipart
 email-validator
 # тести
 pytest
-httpx2
+httpx
+# розробка (версію тримаємо в синхроні з .github/workflows/ci.yml і .claude/hooks)
+ruff==0.16.9
