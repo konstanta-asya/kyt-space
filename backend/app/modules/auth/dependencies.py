@@ -1,9 +1,10 @@
 """Залежності для захисту ендпоінтів. Використання в інших модулях:
 
-    from app.modules.auth.dependencies import get_current_user, require_role
+from app.modules.auth.dependencies import get_current_user, require_role
 
-    @router.post("/", dependencies=[Depends(require_role("manager"))])
+@router.post("/", dependencies=[Depends(require_role("manager"))])
 """
+
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -31,8 +32,8 @@ def get_current_user(
     try:
         payload = decode_access_token(credentials.credentials)
         user_id = int(payload["user_id"])
-    except (jwt.InvalidTokenError, KeyError, TypeError, ValueError):
-        raise _unauthorized
+    except (jwt.InvalidTokenError, KeyError, TypeError, ValueError) as err:
+        raise _unauthorized from err
     user = db.get(User, user_id)
     if user is None:
         raise _unauthorized

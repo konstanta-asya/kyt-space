@@ -3,6 +3,7 @@
 Запуск: docker compose exec backend python -m app.seed
 Скрипт ідемпотентний — повторний запуск не створює дублів.
 """
+
 from datetime import time
 
 from app.core.db import SessionLocal

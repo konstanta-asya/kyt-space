@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from passlib.context import CryptContext
@@ -52,7 +52,7 @@ def authenticate(db: Session, email: str, password: str) -> User | None:
 
 
 def create_access_token(user: User) -> str:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload = {
         "user_id": user.id,
         "role": user.role,
