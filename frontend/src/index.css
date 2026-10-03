@@ -1,13 +1,30 @@
-*
-{ box-sizing: border-box; }
-html, body { 
-  margin: 0; 
-  min-width: 320px; 
-  min-height: 100%; 
+:root { 
+  font-family: Arial, sans-serif;
+   color: #fff;
+   background: #101010;
+--color-background: #101010;
+--color-card: #444;
+--color-accent: #a32820;
+--color-text: #fff;
 }
-
+ * {
+   box-sizing: border-box;
+   }
+html { 
+  scroll-behavior: smooth; }
 body { 
-font-family: Arial, sans-serif; 
-color: #1f2937; 
-background-color: #ffffff;
- }
+  margin: 0; min-width: 320px; }
+button, 
+input { 
+  font: inherit;
+}
+a { color: inherit; }
+button, 
+a { 
+  -webkit-tap-highlight-color: transparent; 
+}
+@media (prefers-reduced-motion: reduce) { 
+  html { 
+    scroll-behavior: auto; 
+  } 
+}
