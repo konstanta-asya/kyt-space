@@ -1,11 +1,20 @@
-:root { 
-  font-family: Arial, sans-serif;
-   color: #fff;
-   background: #101010;
---color-background: #101010;
---color-card: #444;
---color-accent: #a32820;
---color-text: #fff;
+:root {
+  --font-family: Arial, sans-serif;
+  --color-background: #101010;
+  --color-card: #444;
+  --color-accent: #a32820;
+  --color-text: #fff;
+  --color-border: #aaa;
+  --color-focus: #efaaa5;
+  --color-button-hover: #ffffff14;
+  --color-accent-hover: #bc3027;
+  --color-hero-overlay-top: #00000035;
+  --color-hero-overlay-bottom: #00000045;
+  --color-menu-backdrop: #00000040;
+
+  font-family: var(--font-family);
+  color: var(--color-text);
+  background: var(--color-background);
 }
  * {
    box-sizing: border-box;
