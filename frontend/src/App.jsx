@@ -1,30 +1,66 @@
-import { useState } from 'react' 
 import { 
  BrowserRouter, 
  Link, 
  Route,
  Routes,
+ useParams,
  } from 'react-router-dom'
-
+ 
+ import { useEffect, useState } from 'react'
+ import { 
+   getRooms, 
+   getEquipment,
+   getRoom,
+  getRoomEquipment, 
+ } from './api.js'
  import logo from './assets/logo.png'
  import room1 from './assets/room-1.jpg' 
  import room2 from './assets/room-2.jpg'
  import room3 from './assets/room-3.jpg' 
  import './App.css'
 
-const rooms = [ 
-  { id: 1, name: 'Друга репетиційна', image: room1 }, 
-  { id: 2, name: 'Третя репетиційна', image: room2 }, 
-  { id: 3, name: 'Звукозаписувальна', image: room3 }, 
-]
+const roomImages = {
+  1: room1,
+  2: room2,
+  3: room3,
+}
 
-const equipment = 
-  'Барабани, 3 мікрофони, гітарний комбік, басовий комбік, синтезатор, колонки і т.д.'
+function Home( { showHero = true }) {
+  const [rooms, setRooms] = useState([]) 
+  const [equipment, setEquipment] = useState([]) 
+  const [loading, setLoading] = useState(true) 
+  const [error, setError] = useState('')
+useEffect(() => { const controller = new AbortController()
+async function loadData() {
+  try {
+    const [roomsData, equipmentData] = await Promise.all([
+      getRooms(controller.signal),
+      getEquipment(controller.signal),
+    ])
 
-function Home() { 
+    if (!controller.signal.aborted) {
+      setRooms(roomsData)
+      setEquipment(equipmentData)
+    }
+  } catch (err) {
+    if (!controller.signal.aborted) {
+      setError(err.message)
+    }
+  } finally {
+    if (!controller.signal.aborted) {
+      setLoading(false)
+    }
+  }
+}
+
+loadData()
+
+return () => controller.abort()
+}, [])
   return ( 
     <> 
-      <section className="hero"> 
+     {showHero && (
+     <section className="hero"> 
          <div className="hero-content"> 
          <h1>КУТ</h1> 
          <p className="hero-slogan"> 
@@ -50,30 +86,48 @@ function Home() {
       </div>
     </div>
   </section>
+     )}
 
   <section id="rooms" className="rooms-section">
     <h2>НАШІ РЕПЕТИЦІЙНІ КІМНАТИ</h2>
-
+{loading && <p role="status">Завантаження кімнат…</p>}
+{error && <p role="alert">{error}</p>}
+{!loading && !error && rooms.length === 0 && (
+  <p>Кімнат поки немає.</p>
+)}
     <div className="rooms-grid">
       {rooms.map((room) => (
         <Link
-          key={room.id}
-          to={`/rooms/${room.id}`}
-          className="room-card"
-        >
-          <img src={room.image} alt={room.name} />
+  key={room.id}
+  to={'/rooms/' + room.id}
+  className="room-card"
+>
+  {(room.photo_url || roomImages[room.id]) && (
+    <img
+      src={room.photo_url || roomImages[room.id]}
+      alt={room.name}
+    />
+  )}
+        <div className="room-card-content">
 
-          <div className="room-card-content">
-            <h3>{room.name}</h3>
-            <p>{equipment}</p>
-          </div>
-        </Link>
-      ))}
-    </div>
+  <h3>{room.name}</h3>
+  <p>
+    {equipment
+      .filter((item) => item.room_id === room.id)
+      .map((item) =>
+        item.name +
+        (item.status === 'repair' ? ' (на ремонті)' : '')
+      )
+      .join(', ') || 'Апаратуру не зазначено'}
+  </p>
+</div>
+</Link>
+    ))}
+</div>
 
-    <Link
-      to="/schedule"
-      className="button rooms-book-button"
+<Link
+   to="/schedule"
+   className="button rooms-book-button"
     >
       ЗАБРОНЮВАТИ
     </Link>
@@ -81,6 +135,87 @@ function Home() {
 </>
 )
  }
+ function RoomPage() { const { id } = useParams() 
+ const [room, setRoom] = useState(null) 
+ const [equipment, setEquipment] = useState([]) 
+ const [loading, setLoading] = useState(true) 
+ const [error, setError] = useState('')
+useEffect(() => { const controller = new AbortController()
+  async function loadRoom() {
+  setLoading(true)
+  setError('')
+  setRoom(null)
+
+  try {
+    const [roomData, equipmentData] = await Promise.all([
+      getRoom(id, controller.signal),
+      getRoomEquipment(id, controller.signal),
+    ])
+
+    if (!controller.signal.aborted) {
+      setRoom(roomData)
+      setEquipment(equipmentData)
+    }
+  } catch (err) {
+    if (!controller.signal.aborted) {
+      setError(err.message)
+    }
+  } finally {
+    if (!controller.signal.aborted) {
+      setLoading(false)
+    }
+  }
+}
+
+loadRoom()
+return () => controller.abort()
+}, [id])
+if (loading) { return <p role="status">Завантаження кімнати…</p> }
+if (error) { return ( <section className="room-detail"> <p role="alert">{error}</p> <Link to="/">На головну</Link> </section> ) }
+if (!room) { return <p>Кімнату не знайдено.</p> }
+const image = room.photo_url || roomImages[room.id]
+return ( <section className="room-detail"> <Link to="/">← На головну</Link> <h1>{room.name}</h1>
+  {image && (
+    <img
+      src={image}
+      alt={room.name}
+      className="room-detail-image"
+    />
+  )}
+
+  <p>{room.description}</p>
+  <p>Місткість: {room.capacity} осіб</p>
+  <p>Площа: {room.area} м²</p>
+  <p>
+    Години роботи: {room.open_from.slice(0, 5)}
+    {' — '}
+    {room.open_to.slice(0, 5)}
+  </p>
+
+  {room.is_members_only && (
+    <p>Ця кімната доступна лише для кутівців.</p>
+  )}
+
+  <h2>Апаратура</h2>
+
+  {equipment.length === 0 ? (
+    <p>Апаратуру не зазначено.</p>
+  ) : (
+    <ul>
+      {equipment.map((item) => (
+        <li key={item.id}>
+          {item.name}
+          {item.status === 'repair' && ' (на ремонті)'}
+        </li>
+      ))}
+    </ul>
+  )}
+
+  <Link to="/schedule" className="button button-primary">
+    Перейти до розкладу
+  </Link>
+</section>
+)}
 function Placeholder({ title }) { 
   return ( 
   <section className="placeholder-page">
@@ -166,12 +301,12 @@ onClick={closeMenu}
     <Routes>
       <Route path="/" element={<Home />} />
       <Route
-        path="/rooms"
-        element={<Placeholder title="Перелік кімнат" />}
+        path="rooms"
+        element={<Home showHero={false} />}
       />
       <Route
         path="/rooms/:id"
-        element={<Placeholder title="Сторінка кімнати" />}
+        element={<RoomPage />}
       />
       <Route
         path="/schedule"
