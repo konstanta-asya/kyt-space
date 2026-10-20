@@ -21,6 +21,7 @@ import {
  import './App.css'
  import LoginPage from './LoginPage.jsx'
  import RegisterPage from './RegisterPage.jsx'
+ import SchedulePage from './SchedulePage.jsx'
 
 const roomImages = {
   1: room1,
@@ -363,7 +364,7 @@ onClick={closeMenu}
       />
       <Route
         path="/schedule"
-        element={<Placeholder title="Розклад" />}
+        element={<SchedulePage />}
       />
       <Route
       path="/rules"
