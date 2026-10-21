@@ -11,15 +11,23 @@ import {
   Title,
 } from '@mantine/core'
 import { IconArrowLeft, IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
+import { getOpenRange } from '../rooms.js'
 import { capitalize, getRoomColor, toMinutes } from '../schedule.js'
 import RoomImage from './RoomImage.jsx'
 
 const SLOT_MINUTES = 30
+const EVENT_MINUTES = 60
 
-// Слоти по 30 хв у межах годин роботи кімнати (open_from–open_to)
-function getSlots(room) {
+// Спільна сітка слотів по 30 хв для всіх колонок, щоб рядки збігалися за часом:
+// від найранішого відкриття до найпізнішого закриття, з урахуванням подій поза годинами
+function getSlots(rooms, dayEvents) {
+  const ranges = rooms.map(getOpenRange)
+  const eventStarts = dayEvents.map((event) => toMinutes(event.time))
+  const from = Math.min(...ranges.map((range) => range.from), ...eventStarts)
+  const to = Math.max(...ranges.map((range) => range.to), ...eventStarts.map((start) => start + EVENT_MINUTES))
+
   const slots = []
-  for (let minutes = toMinutes(room.open_from); minutes < toMinutes(room.open_to); minutes += SLOT_MINUTES) {
+  for (let minutes = from - (from % SLOT_MINUTES); minutes < to; minutes += SLOT_MINUTES) {
     const hour = String(Math.floor(minutes / 60)).padStart(2, '0')
     const minute = String(minutes % 60).padStart(2, '0')
     slots.push({ minutes, label: hour + ':' + minute })
@@ -27,7 +35,9 @@ function getSlots(room) {
   return slots
 }
 
-function RoomColumn({ room, color, dayEvents }) {
+function RoomColumn({ room, color, slots, roomEvents }) {
+  const openRange = getOpenRange(room)
+
   return (
     <Paper
       withBorder
@@ -41,12 +51,14 @@ function RoomColumn({ room, color, dayEvents }) {
       </Group>
 
       <Stack gap={0}>
-        {getSlots(room).map((slot) => {
-          const occupied = dayEvents.some((event) => {
+        {slots.map((slot) => {
+          const occupied = roomEvents.some((event) => {
             const start = toMinutes(event.time)
 
-            return event.roomId === room.id && slot.minutes >= start && slot.minutes < start + 60
+            return slot.minutes >= start && slot.minutes < start + EVENT_MINUTES
           })
+          // Подію поза годинами роботи все одно показуємо як «Зайнято», щоб не загубити її
+          const closed = !occupied && (slot.minutes < openRange.from || slot.minutes >= openRange.to)
 
           return (
             <Group
@@ -60,7 +72,7 @@ function RoomColumn({ room, color, dayEvents }) {
                 borderLeft: occupied ? `3px solid var(--mantine-color-${color}-6)` : '3px solid transparent',
               }}
             >
-              <Text fz="xs" c={occupied ? undefined : 'dimmed'} ff="monospace">
+              <Text fz="xs" c={occupied ? undefined : closed ? 'dark.4' : 'dimmed'} ff="monospace">
                 {slot.label}
               </Text>
               {occupied ? (
@@ -68,8 +80,8 @@ function RoomColumn({ room, color, dayEvents }) {
                   Зайнято
                 </Badge>
               ) : (
-                <Text fz="xs" c="dark.3">
-                  Вільно
+                <Text fz="xs" c={closed ? 'dark.4' : 'dark.3'}>
+                  {closed ? 'Зачинено' : 'Вільно'}
                 </Text>
               )}
             </Group>
@@ -96,6 +108,7 @@ export default function ScheduleDay({ date, events, rooms, onBack, onDateChange 
     }),
   )
   const dayEvents = events.filter((event) => event.day === date.getDate())
+  const slots = getSlots(rooms, dayEvents)
 
   return (
     <Box>
@@ -129,7 +142,8 @@ export default function ScheduleDay({ date, events, rooms, onBack, onDateChange 
               key={room.id}
               room={room}
               color={getRoomColor(rooms, room.id)}
-              dayEvents={dayEvents}
+              slots={slots}
+              roomEvents={dayEvents.filter((event) => event.roomId === room.id)}
             />
           ))}
         </SimpleGrid>

@@ -14,8 +14,10 @@ export function clearToken() {
 }
 
 // Єдина обгортка над fetch: додає токен, серіалізує body в JSON
-// і перетворює відповідь з помилкою на Error з полем status
-async function request(path, { method = 'GET', body, signal } = {}) {
+// і перетворює відповідь з помилкою на Error з полем status.
+// showDetail: показувати текст помилки з бекенду (для форм входу/реєстрації);
+// інакше — власне українське повідомлення, бо detail буває англійським або технічним
+async function request(path, { method = 'GET', body, signal, showDetail = false } = {}) {
   const headers = {}
   const token = getToken()
   if (token) headers.Authorization = 'Bearer ' + token
@@ -40,10 +42,11 @@ async function request(path, { method = 'GET', body, signal } = {}) {
   const data = await response.json().catch(() => ({}))
 
   if (!response.ok) {
-    let message = 'Не вдалося виконати запит: ' + response.status
-    if (typeof data.detail === 'string') {
+    let message =
+      response.status === 404 ? 'Нічого не знайдено.' : 'Не вдалося завантажити дані: ' + response.status
+    if (showDetail && typeof data.detail === 'string') {
       message = data.detail
-    } else if (Array.isArray(data.detail)) {
+    } else if (showDetail && Array.isArray(data.detail)) {
       message = data.detail.map((item) => item.msg).join('. ')
     }
 
@@ -72,11 +75,11 @@ export function getRoomEquipment(id, signal) {
 }
 
 export function registerUser(userData) {
-  return request('/auth/register', { method: 'POST', body: userData })
+  return request('/auth/register', { method: 'POST', body: userData, showDetail: true })
 }
 
 export function loginUser(email, password) {
-  return request('/auth/login', { method: 'POST', body: { email, password } })
+  return request('/auth/login', { method: 'POST', body: { email, password }, showDetail: true })
 }
 
 export function getCurrentUser(signal) {

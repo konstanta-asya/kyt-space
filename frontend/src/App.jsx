@@ -27,18 +27,22 @@ function Layout() {
   const [authLoading, setAuthLoading] = useState(() => Boolean(getToken()))
 
   useEffect(() => {
-    if (!getToken()) return
+    const sentToken = getToken()
+    if (!sentToken) return
 
     const controller = new AbortController()
+    // Поки запит летить, користувач міг увійти заново й зберегти новий токен —
+    // тоді відповідь на старий токен ігноруємо, щоб не перезаписати сесію
+    const isStale = () => controller.signal.aborted || getToken() !== sentToken
 
     getCurrentUser(controller.signal)
       .then((currentUser) => {
-        if (!controller.signal.aborted) {
+        if (!isStale()) {
           setUser(currentUser)
         }
       })
       .catch((err) => {
-        if (!controller.signal.aborted && err.status === 401) {
+        if (!isStale() && err.status === 401) {
           clearToken()
         }
       })
