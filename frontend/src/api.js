@@ -1,11 +1,26 @@
 const API_URL = 'http://localhost:8000'
+
+// fetch кидає TypeError ("Failed to fetch"), коли сервер недоступний,
+// тому підміняємо його зрозумілим повідомленням
+async function request(url, options) {
+  try {
+    return await fetch(url, options)
+  } catch (err) {
+    if (err.name === 'AbortError') throw err
+    throw new Error('Немає з’єднання з сервером. Спробуйте пізніше.', { cause: err })
+  }
+}
 async function getData(path, signal) { 
-    const response = await fetch(API_URL +  path, { signal })
+    const response = await request(API_URL + path, { signal })
 
     if (!response.ok) {
-         throw new Error(
-            'Не вдалося завантажити дані: ' + response.status
+         const error = new Error(
+            response.status === 404
+              ? 'Нічого не знайдено.'
+              : 'Не вдалося завантажити дані: ' + response.status
          )
+         error.status = response.status
+         throw error
     }
 return response.json() 
 }
@@ -24,8 +39,9 @@ export function getRoomEquipment(id, signal) {
   return getData('/rooms/' + id + '/equipment', signal)
 }
 
-async function authRequest(path, options = {}) { const response = await fetch(API_URL + path, options) 
-    const data = await response.json()
+async function authRequest(path, options = {}) { const response = await request(API_URL + path, options)
+    // при 5xx сервер може повернути не JSON
+    const data = await response.json().catch(() => ({}))
 if (!response.ok) { let message = 'Не вдалося виконати запит'
     if (typeof data.detail === 'string') {
   message = data.detail
