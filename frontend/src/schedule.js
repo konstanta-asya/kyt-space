@@ -24,6 +24,15 @@ export function getRoomName(rooms, roomId) {
   return rooms.find((room) => room.id === roomId)?.name || 'Кімната ' + roomId
 }
 
+export function startOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
+export function toMinutes(time) {
+  const [hours, minutes] = time.split(':').map(Number)
+  return hours * 60 + minutes
+}
+
 export function capitalize(text) {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }

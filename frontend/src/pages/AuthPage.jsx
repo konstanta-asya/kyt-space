@@ -54,11 +54,7 @@ export default function AuthPage({ onLogin }) {
       </Text>
 
       {mode === 'login' ? (
-        <LoginForm
-          onLogin={onLogin}
-          initialEmail={state?.registeredEmail}
-          justRegistered={Boolean(state?.registeredEmail)}
-        />
+        <LoginForm onLogin={onLogin} initialEmail={state?.registeredEmail} />
       ) : (
         <RegisterForm onRegistered={handleRegistered} />
       )}

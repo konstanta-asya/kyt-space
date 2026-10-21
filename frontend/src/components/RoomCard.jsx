@@ -1,12 +1,12 @@
-import { Badge, Box, Button, Card, Center, Group, Image, Stack, Text, Title } from '@mantine/core'
-import { IconArrowRight, IconClock, IconLock, IconMusic, IconRuler2, IconUsers } from '@tabler/icons-react'
+import { Badge, Box, Button, Card, Group, Stack, Text, Title } from '@mantine/core'
+import { IconArrowRight, IconClock, IconLock, IconRuler2, IconUsers } from '@tabler/icons-react'
 import { Link } from 'react-router-dom'
-import { formatHours, getRoomImage } from '../rooms.js'
+import { formatHours } from '../rooms.js'
+import RoomImage from './RoomImage.jsx'
 
 const MAX_BADGES = 4
 
 export default function RoomCard({ room, equipment }) {
-  const image = getRoomImage(room)
   const shown = equipment.slice(0, MAX_BADGES)
   const hidden = equipment.length - shown.length
 
@@ -20,13 +20,7 @@ export default function RoomCard({ room, equipment }) {
       h="100%"
     >
       <Card.Section pos="relative" style={{ overflow: 'hidden' }}>
-        {image ? (
-          <Image src={image} alt={room.name} h={220} />
-        ) : (
-          <Center h={220} bg="dark.6">
-            <IconMusic size={56} stroke={1.2} color="var(--mantine-color-dark-3)" />
-          </Center>
-        )}
+        <RoomImage room={room} h={220} iconSize={56} />
         {room.is_members_only && (
           <Badge
             pos="absolute"

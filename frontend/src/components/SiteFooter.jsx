@@ -4,6 +4,12 @@ import { Link } from 'react-router-dom'
 import logo from '../assets/logo.png'
 import { NAV_LINKS } from '../navigation.js'
 
+const SCHEDULE_INFO = [
+  { icon: IconClock, text: 'Пн–Нд: з 09:00 до 21:00' },
+  { icon: IconBrandTelegram, text: 'Бронювання онлайн або через Telegram' },
+  { icon: IconCalendarEvent, text: 'Записи подкастів і репетиції — лише за попереднім записом' },
+]
+
 export default function SiteFooter() {
   return (
     <Box
@@ -31,18 +37,12 @@ export default function SiteFooter() {
             <Title order={4} fz="sm" tt="uppercase" c="dimmed">
               Графік роботи
             </Title>
-            <Group gap="sm" wrap="nowrap" align="flex-start">
-              <IconClock size={20} color="var(--mantine-color-kut-4)" />
-              <Text fz="sm">Пн–Нд: з 09:00 до 21:00</Text>
-            </Group>
-            <Group gap="sm" wrap="nowrap" align="flex-start">
-              <IconBrandTelegram size={20} color="var(--mantine-color-kut-4)" />
-              <Text fz="sm">Бронювання онлайн або через Telegram</Text>
-            </Group>
-            <Group gap="sm" wrap="nowrap" align="flex-start">
-              <IconCalendarEvent size={20} color="var(--mantine-color-kut-4)" />
-              <Text fz="sm">Записи подкастів і репетиції — лише за попереднім записом</Text>
-            </Group>
+            {SCHEDULE_INFO.map((item) => (
+              <Group key={item.text} gap="sm" wrap="nowrap" align="flex-start">
+                <item.icon size={20} color="var(--mantine-color-kut-4)" />
+                <Text fz="sm">{item.text}</Text>
+              </Group>
+            ))}
           </Stack>
 
           <Stack gap="md">

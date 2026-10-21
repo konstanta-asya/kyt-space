@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import {
   Alert,
   Badge,
@@ -28,6 +27,7 @@ import {
 import { Link } from 'react-router-dom'
 import { getEquipment, getRooms } from '../api.js'
 import RoomCard from '../components/RoomCard.jsx'
+import { useApi } from '../useApi.js'
 
 const FEATURES = [
   {
@@ -100,7 +100,7 @@ function Features() {
     <Container size="xl" mt={{ base: 0, md: -40 }} pos="relative">
       <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
         {FEATURES.map((feature) => (
-          <Paper key={feature.title} withBorder p={{ base: 'md', md: 'xl' }} bg="dark.7">
+          <Paper key={feature.title} withBorder p={{ base: 'md', md: 'xl' }}>
             <Group gap="md" wrap="nowrap" align="flex-start">
               <ThemeIcon size={48} radius="md" variant="light">
                 <feature.icon size={26} />
@@ -135,41 +135,12 @@ function RoomsSkeleton() {
   ))
 }
 
-function RoomsSection({ standalone }) {
-  const [rooms, setRooms] = useState([])
-  const [equipment, setEquipment] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    async function loadData() {
-      try {
-        const [roomsData, equipmentData] = await Promise.all([
-          getRooms(controller.signal),
-          getEquipment(controller.signal),
-        ])
-
-        if (!controller.signal.aborted) {
-          setRooms(roomsData)
-          setEquipment(equipmentData)
-        }
-      } catch (err) {
-        if (!controller.signal.aborted) {
-          setError(err.message)
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false)
-        }
-      }
-    }
-
-    loadData()
-
-    return () => controller.abort()
-  }, [])
+export function RoomsSection({ standalone }) {
+  const { data, loading, error } = useApi(
+    (signal) => Promise.all([getRooms(signal), getEquipment(signal)]),
+    [],
+  )
+  const [rooms, equipment] = data || [[], []]
 
   return (
     <Container size="xl" id="rooms" mt={standalone ? 56 : 120}>
@@ -203,12 +174,12 @@ function RoomsSection({ standalone }) {
           title="Не вдалося завантажити кімнати"
           mb="xl"
         >
-          {error}
+          {error.message}
         </Alert>
       )}
 
       {!loading && !error && rooms.length === 0 && (
-        <Paper withBorder p={48} ta="center" bg="dark.7">
+        <Paper withBorder p={48} ta="center">
           <ThemeIcon size={64} radius="xl" variant="light" color="gray" mx="auto">
             <IconMoodEmpty size={34} />
           </ThemeIcon>
@@ -243,10 +214,7 @@ function CallToAction() {
     <Container size="xl" mt={120}>
       <Paper
         p={{ base: 32, md: 56 }}
-        style={{
-          background:
-            'linear-gradient(135deg, var(--mantine-color-kut-8) 0%, var(--mantine-color-kut-9) 45%, var(--mantine-color-dark-7) 100%)',
-        }}
+        bg="linear-gradient(135deg, var(--mantine-color-kut-8) 0%, var(--mantine-color-kut-9) 45%, var(--mantine-color-dark-7) 100%)"
       >
         <Group justify="space-between" gap="xl">
           <div>
@@ -273,11 +241,7 @@ function CallToAction() {
   )
 }
 
-export default function HomePage({ showHero = true }) {
-  if (!showHero) {
-    return <RoomsSection standalone />
-  }
-
+export default function HomePage() {
   return (
     <>
       <Hero />

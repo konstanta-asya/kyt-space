@@ -1,59 +1,84 @@
 const API_URL = 'http://localhost:8000'
+const TOKEN_KEY = 'access_token'
 
-// fetch кидає TypeError ("Failed to fetch"), коли сервер недоступний,
-// тому підміняємо його зрозумілим повідомленням
-async function request(url, options) {
+export function getToken() {
+  return sessionStorage.getItem(TOKEN_KEY)
+}
+
+export function setToken(token) {
+  sessionStorage.setItem(TOKEN_KEY, token)
+}
+
+export function clearToken() {
+  sessionStorage.removeItem(TOKEN_KEY)
+}
+
+// Єдина обгортка над fetch: додає токен, серіалізує body в JSON
+// і перетворює відповідь з помилкою на Error з полем status
+async function request(path, { method = 'GET', body, signal } = {}) {
+  const headers = {}
+  const token = getToken()
+  if (token) headers.Authorization = 'Bearer ' + token
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
+
+  let response
   try {
-    return await fetch(url, options)
+    response = await fetch(API_URL + path, {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal,
+    })
   } catch (err) {
+    // fetch кидає TypeError ("Failed to fetch"), коли сервер недоступний,
+    // тому підміняємо його зрозумілим повідомленням
     if (err.name === 'AbortError') throw err
     throw new Error('Немає з’єднання з сервером. Спробуйте пізніше.', { cause: err })
   }
-}
-async function getData(path, signal) { 
-    const response = await request(API_URL + path, { signal })
 
-    if (!response.ok) {
-         const error = new Error(
-            response.status === 404
-              ? 'Нічого не знайдено.'
-              : 'Не вдалося завантажити дані: ' + response.status
-         )
-         error.status = response.status
-         throw error
+  // при 5xx сервер може повернути не JSON
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    let message = 'Не вдалося виконати запит: ' + response.status
+    if (typeof data.detail === 'string') {
+      message = data.detail
+    } else if (Array.isArray(data.detail)) {
+      message = data.detail.map((item) => item.msg).join('. ')
     }
-return response.json() 
+
+    const error = new Error(message)
+    error.status = response.status
+    throw error
+  }
+
+  return data
 }
-export function getRooms(signal) { 
-    return getData('/rooms', signal) 
+
+export function getRooms(signal) {
+  return request('/rooms', { signal })
 }
-export function getEquipment(signal) { 
-    return getData('/equipment', signal) 
+
+export function getEquipment(signal) {
+  return request('/equipment', { signal })
 }
 
 export function getRoom(id, signal) {
-  return getData('/rooms/' + id, signal)
+  return request('/rooms/' + id, { signal })
 }
 
 export function getRoomEquipment(id, signal) {
-  return getData('/rooms/' + id + '/equipment', signal)
+  return request('/rooms/' + id + '/equipment', { signal })
 }
 
-async function authRequest(path, options = {}) { const response = await request(API_URL + path, options)
-    // при 5xx сервер може повернути не JSON
-    const data = await response.json().catch(() => ({}))
-if (!response.ok) { let message = 'Не вдалося виконати запит'
-    if (typeof data.detail === 'string') {
-  message = data.detail
-} else if (Array.isArray(data.detail)) {
-  message = data.detail.map((item) => item.msg).join('. ')
+export function registerUser(userData) {
+  return request('/auth/register', { method: 'POST', body: userData })
 }
 
-const error = new Error(message)
-error.status = response.status
-throw error
+export function loginUser(email, password) {
+  return request('/auth/login', { method: 'POST', body: { email, password } })
 }
-return data }
-export function registerUser(userData) { return authRequest('/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json', }, body: JSON.stringify(userData), }) }
-export function loginUser(email, password) { return authRequest('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json', }, body: JSON.stringify({ email, password }), }) }
-export function getCurrentUser(token, signal) { return authRequest('/auth/me', { headers: { Authorization: 'Bearer ' + token, }, signal, }) }
+
+export function getCurrentUser(signal) {
+  return request('/auth/me', { signal })
+}

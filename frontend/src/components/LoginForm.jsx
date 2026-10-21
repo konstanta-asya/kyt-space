@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { Alert, Button, PasswordInput, Stack, TextInput } from '@mantine/core'
 import { IconAlertCircle, IconAt, IconCircleCheck, IconLock, IconLogin2 } from '@tabler/icons-react'
 import { useNavigate } from 'react-router-dom'
-import { getCurrentUser, loginUser } from '../api.js'
+import { clearToken, getCurrentUser, loginUser, setToken } from '../api.js'
 
-export default function LoginForm({ onLogin, initialEmail = '', justRegistered = false }) {
+export default function LoginForm({ onLogin, initialEmail = '' }) {
+  const justRegistered = Boolean(initialEmail)
   const navigate = useNavigate()
   const [email, setEmail] = useState(initialEmail)
   const [password, setPassword] = useState('')
@@ -19,10 +20,15 @@ export default function LoginForm({ onLogin, initialEmail = '', justRegistered =
     setError('')
 
     try {
-      const data = await loginUser(email.trim(), password)
-      const user = await getCurrentUser(data.access_token)
+      const { access_token } = await loginUser(email.trim(), password)
+      // /auth/me бере токен зі сховища, тож зберігаємо його до запиту
+      setToken(access_token)
+      const user = await getCurrentUser().catch((err) => {
+        clearToken()
+        throw err
+      })
 
-      onLogin(data.access_token, user)
+      onLogin(user)
       navigate('/')
     } catch (err) {
       setError(

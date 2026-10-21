@@ -29,7 +29,7 @@ export default function AuthLayout({ children }) {
       </Box>
 
       <Center px="md" py={{ base: 40, md: 64 }}>
-        <Paper withBorder w="100%" maw={440} p={{ base: 24, sm: 40 }} bg="dark.7" shadow="xl">
+        <Paper withBorder w="100%" maw={440} p={{ base: 24, sm: 40 }} shadow="xl">
           {children}
         </Paper>
       </Center>

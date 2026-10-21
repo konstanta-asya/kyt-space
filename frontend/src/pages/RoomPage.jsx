@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import {
   Alert,
   Anchor,
@@ -6,11 +5,9 @@ import {
   Box,
   Breadcrumbs,
   Button,
-  Center,
   Container,
   Grid,
   Group,
-  Image,
   Paper,
   SimpleGrid,
   Skeleton,
@@ -26,18 +23,19 @@ import {
   IconCheck,
   IconClock,
   IconLock,
-  IconMusic,
   IconRuler2,
   IconTool,
   IconUsers,
 } from '@tabler/icons-react'
 import { Link, useParams } from 'react-router-dom'
 import { getRoom, getRoomEquipment } from '../api.js'
-import { formatHours, getRoomImage } from '../rooms.js'
+import RoomImage from '../components/RoomImage.jsx'
+import { formatHours } from '../rooms.js'
+import { useApi } from '../useApi.js'
 
 function Stat({ icon: Icon, label, value }) {
   return (
-    <Paper withBorder p={{ base: 'sm', xs: 'md' }} bg="dark.7">
+    <Paper withBorder p={{ base: 'sm', xs: 'md' }}>
       <ThemeIcon variant="light" size={36} radius="md">
         <Icon size={20} />
       </ThemeIcon>
@@ -70,45 +68,11 @@ function RoomSkeleton() {
 
 export default function RoomPage() {
   const { id } = useParams()
-  const [room, setRoom] = useState(null)
-  const [equipment, setEquipment] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    async function loadRoom() {
-      setLoading(true)
-      setError('')
-      setRoom(null)
-
-      try {
-        const [roomData, equipmentData] = await Promise.all([
-          getRoom(id, controller.signal),
-          getRoomEquipment(id, controller.signal),
-        ])
-
-        if (!controller.signal.aborted) {
-          setRoom(roomData)
-          setEquipment(equipmentData)
-        }
-      } catch (err) {
-        if (!controller.signal.aborted) {
-          setError(err.status === 404 ? 'Такої кімнати не існує.' : err.message)
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false)
-        }
-      }
-    }
-
-    loadRoom()
-    return () => controller.abort()
-  }, [id])
-
-  const image = room && getRoomImage(room)
+  const { data, loading, error } = useApi(
+    (signal) => Promise.all([getRoom(id, signal), getRoomEquipment(id, signal)]),
+    [id],
+  )
+  const [room, equipment] = data || [null, []]
 
   return (
     <Container size="xl" pt={40}>
@@ -131,7 +95,7 @@ export default function RoomPage() {
           icon={<IconAlertTriangle />}
           title="Не вдалося відкрити кімнату"
         >
-          <Text fz="sm">{error}</Text>
+          <Text fz="sm">{error.status === 404 ? 'Такої кімнати не існує.' : error.message}</Text>
           <Button
             component={Link}
             to="/rooms"
@@ -148,13 +112,7 @@ export default function RoomPage() {
       {room && (
         <Grid gutter={48}>
           <Grid.Col span={{ base: 12, md: 7 }}>
-            {image ? (
-              <Image src={image} alt={room.name} radius="lg" h={{ base: 260, md: 480 }} />
-            ) : (
-              <Center h={{ base: 260, md: 480 }} bg="dark.6" style={{ borderRadius: 'var(--mantine-radius-lg)' }}>
-                <IconMusic size={72} stroke={1.2} color="var(--mantine-color-dark-3)" />
-              </Center>
-            )}
+            <RoomImage room={room} h={{ base: 260, md: 480 }} radius="lg" iconSize={72} />
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, md: 5 }}>

@@ -47,7 +47,7 @@ export const theme = createTheme({
       defaultProps: { radius: 'lg' },
     },
     Paper: {
-      defaultProps: { radius: 'lg' },
+      defaultProps: { radius: 'lg', bg: 'dark.7' },
     },
   },
 })

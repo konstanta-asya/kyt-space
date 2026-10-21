@@ -3,57 +3,45 @@ import {
   Badge,
   Box,
   Button,
-  Center,
   Group,
-  Image,
   Paper,
   SimpleGrid,
   Stack,
   Text,
   Title,
 } from '@mantine/core'
-import { IconArrowLeft, IconChevronLeft, IconChevronRight, IconMusic } from '@tabler/icons-react'
-import { getRoomImage } from '../rooms.js'
-import { capitalize, getRoomColor } from '../schedule.js'
+import { IconArrowLeft, IconChevronLeft, IconChevronRight } from '@tabler/icons-react'
+import { capitalize, getRoomColor, toMinutes } from '../schedule.js'
+import RoomImage from './RoomImage.jsx'
 
-// Слоти по 30 хв з 09:00 до 21:00
-const slots = Array.from({ length: 24 }, (_, index) => {
-  const minutes = 9 * 60 + index * 30
-  const hour = String(Math.floor(minutes / 60)).padStart(2, '0')
-  const minute = String(minutes % 60).padStart(2, '0')
+const SLOT_MINUTES = 30
 
-  return { minutes, label: hour + ':' + minute }
-})
-
-function toMinutes(time) {
-  const [hours, minutes] = time.split(':').map(Number)
-  return hours * 60 + minutes
+// Слоти по 30 хв у межах годин роботи кімнати (open_from–open_to)
+function getSlots(room) {
+  const slots = []
+  for (let minutes = toMinutes(room.open_from); minutes < toMinutes(room.open_to); minutes += SLOT_MINUTES) {
+    const hour = String(Math.floor(minutes / 60)).padStart(2, '0')
+    const minute = String(minutes % 60).padStart(2, '0')
+    slots.push({ minutes, label: hour + ':' + minute })
+  }
+  return slots
 }
 
 function RoomColumn({ room, color, dayEvents }) {
-  const image = getRoomImage(room)
-
   return (
     <Paper
       withBorder
-      bg="dark.7"
       style={{ overflow: 'hidden', borderTop: `3px solid var(--mantine-color-${color}-6)` }}
     >
       <Group gap="sm" p="sm" wrap="nowrap" style={{ borderBottom: '1px solid var(--mantine-color-dark-5)' }}>
-        {image ? (
-          <Image src={image} alt="" w={44} h={44} radius="md" />
-        ) : (
-          <Center w={44} h={44} bg="dark.6" style={{ borderRadius: 'var(--mantine-radius-md)', flexShrink: 0 }}>
-            <IconMusic size={20} color="var(--mantine-color-dark-2)" />
-          </Center>
-        )}
+        <RoomImage room={room} alt="" w={44} h={44} radius="md" iconSize={20} />
         <Text fw={700} fz="sm" lh={1.3}>
           {room.name}
         </Text>
       </Group>
 
       <Stack gap={0}>
-        {slots.map((slot) => {
+        {getSlots(room).map((slot) => {
           const occupied = dayEvents.some((event) => {
             const start = toMinutes(event.time)
 

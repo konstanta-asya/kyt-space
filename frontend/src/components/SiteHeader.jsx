@@ -29,24 +29,13 @@ const ROLE_LABELS = {
   superadmin: 'Суперадмін',
 }
 
-function initials(name) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0].toUpperCase())
-    .join('')
-}
-
 function UserMenu({ user, onLogout }) {
   return (
     <Menu position="bottom-end" width={240} shadow="lg">
       <Menu.Target>
         <UnstyledButton aria-label="Меню користувача">
           <Group gap="xs">
-            <Avatar color="kut" variant="filled" radius="xl" size={36}>
-              {initials(user.full_name)}
-            </Avatar>
+            <Avatar name={user.full_name} color="kut" variant="filled" radius="xl" size={36} />
             <Text fz="sm" fw={600} maw={140} truncate>
               {user.full_name}
             </Text>
@@ -95,19 +84,22 @@ export default function SiteHeader({ user, authLoading, onLogout }) {
         </Group>
 
         <Group gap={4} visibleFrom="md" component="nav" aria-label="Навігація">
-          {NAV_LINKS.map((link) => (
-            <Button
-              key={link.to}
-              component={Link}
-              to={link.to}
-              variant={isActive(link.to) ? 'light' : 'subtle'}
-              color={isActive(link.to) ? 'kut' : 'gray'}
-              c={isActive(link.to) ? undefined : 'gray.3'}
-              fw={500}
-            >
-              {link.label}
-            </Button>
-          ))}
+          {NAV_LINKS.map((link) => {
+            const active = isActive(link.to)
+            return (
+              <Button
+                key={link.to}
+                component={Link}
+                to={link.to}
+                variant={active ? 'light' : 'subtle'}
+                color={active ? 'kut' : 'gray'}
+                c={active ? undefined : 'gray.3'}
+                fw={500}
+              >
+                {link.label}
+              </Button>
+            )
+          })}
         </Group>
 
         <Group gap="sm" visibleFrom="md" wrap="nowrap">
@@ -168,9 +160,7 @@ export default function SiteHeader({ user, authLoading, onLogout }) {
         {authLoading ? null : user ? (
           <Stack gap="sm">
             <Group gap="sm">
-              <Avatar color="kut" variant="filled" radius="xl">
-                {initials(user.full_name)}
-              </Avatar>
+              <Avatar name={user.full_name} color="kut" variant="filled" radius="xl" />
               <div style={{ minWidth: 0 }}>
                 <Text fz="sm" fw={600} truncate>
                   {user.full_name}

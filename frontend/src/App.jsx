@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { AppShell } from '@mantine/core'
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
-import { getCurrentUser } from './api.js'
+import { clearToken, getCurrentUser, getToken } from './api.js'
 import SiteFooter from './components/SiteFooter.jsx'
 import SiteHeader from './components/SiteHeader.jsx'
-import HomePage from './pages/HomePage.jsx'
+import HomePage, { RoomsSection } from './pages/HomePage.jsx'
 import AuthPage from './pages/AuthPage.jsx'
 import PlaceholderPage from './pages/PlaceholderPage.jsx'
 import RoomPage from './pages/RoomPage.jsx'
@@ -24,15 +24,14 @@ function ScrollToTop() {
 
 function Layout() {
   const [user, setUser] = useState(null)
-  const [authLoading, setAuthLoading] = useState(() => Boolean(sessionStorage.getItem('access_token')))
+  const [authLoading, setAuthLoading] = useState(() => Boolean(getToken()))
 
   useEffect(() => {
-    const token = sessionStorage.getItem('access_token')
-    if (!token) return
+    if (!getToken()) return
 
     const controller = new AbortController()
 
-    getCurrentUser(token, controller.signal)
+    getCurrentUser(controller.signal)
       .then((currentUser) => {
         if (!controller.signal.aborted) {
           setUser(currentUser)
@@ -40,7 +39,7 @@ function Layout() {
       })
       .catch((err) => {
         if (!controller.signal.aborted && err.status === 401) {
-          sessionStorage.removeItem('access_token')
+          clearToken()
         }
       })
       .finally(() => {
@@ -52,13 +51,12 @@ function Layout() {
     return () => controller.abort()
   }, [])
 
-  function handleLogin(token, currentUser) {
-    sessionStorage.setItem('access_token', token)
+  function handleLogin(currentUser) {
     setUser(currentUser)
   }
 
   function handleLogout() {
-    sessionStorage.removeItem('access_token')
+    clearToken()
     setUser(null)
   }
 
@@ -79,7 +77,7 @@ function Layout() {
       <AppShell.Main>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/rooms" element={<HomePage showHero={false} />} />
+          <Route path="/rooms" element={<RoomsSection standalone />} />
           <Route path="/rooms/:id" element={<RoomPage />} />
           <Route path="/login" element={<AuthPage onLogin={handleLogin} />} />
           <Route path="/register" element={<AuthPage onLogin={handleLogin} />} />

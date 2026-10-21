@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   ActionIcon,
   Alert,
@@ -19,13 +19,13 @@ import { IconArrowRight, IconChevronLeft, IconChevronRight, IconInfoCircle } fro
 import { Link } from 'react-router-dom'
 import { getRooms } from '../api.js'
 import ScheduleDay from '../components/ScheduleDay.jsx'
-import { capitalize, demoEvents, getRoomColor, getRoomName } from '../schedule.js'
+import { capitalize, demoEvents, getRoomColor, getRoomName, startOfMonth } from '../schedule.js'
+import { useApi } from '../useApi.js'
 
 const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
 
 function getMonthDays(month) {
-  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1)
-  const offset = (firstDay.getDay() + 6) % 7
+  const offset = (startOfMonth(month).getDay() + 6) % 7
 
   return Array.from(
     { length: 42 },
@@ -75,18 +75,9 @@ function DayCell({ date, isToday, isOtherMonth, events, rooms, onOpen }) {
       mih={{ base: 56, sm: 112 }}
       p={{ base: 6, sm: 8 }}
       bg={isOtherMonth ? 'dark.8' : 'dark.7'}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 4,
-        borderRadius: 'var(--mantine-radius-md)',
-        border: isToday
-          ? '1px solid var(--mantine-color-kut-6)'
-          : '1px solid var(--mantine-color-dark-5)',
-        opacity: isOtherMonth ? 0.45 : 1,
-        transition: 'border-color 0.15s',
-      }}
+      opacity={isOtherMonth ? 0.45 : 1}
       className="schedule-cell"
+      data-today={isToday || undefined}
     >
       <Group justify="space-between" wrap="nowrap" gap={4}>
         <Text
@@ -153,28 +144,10 @@ function DayCell({ date, isToday, isOtherMonth, events, rooms, onOpen }) {
 
 export default function SchedulePage() {
   const [selectedDate, setSelectedDate] = useState(null)
-  const [month, setMonth] = useState(
-    () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-  )
-  const [rooms, setRooms] = useState([])
-  const [roomsLoading, setRoomsLoading] = useState(true)
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    getRooms(controller.signal)
-      .then((data) => {
-        if (!controller.signal.aborted) setRooms(data)
-      })
-      .catch(() => {
-        // без кімнат календар однаково працює — назви будуть «Кімната N»
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setRoomsLoading(false)
-      })
-
-    return () => controller.abort()
-  }, [])
+  const [month, setMonth] = useState(() => startOfMonth(new Date()))
+  // помилку ігноруємо: без кімнат календар однаково працює — назви будуть «Кімната N»
+  const { data, loading: roomsLoading } = useApi(getRooms, [])
+  const rooms = data || []
 
   const today = new Date()
   const days = getMonthDays(month)
@@ -187,12 +160,11 @@ export default function SchedulePage() {
   }
 
   function showToday() {
-    const date = new Date()
-    setMonth(new Date(date.getFullYear(), date.getMonth(), 1))
+    setMonth(startOfMonth(new Date()))
   }
 
   function returnToMonth() {
-    setMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1))
+    setMonth(startOfMonth(selectedDate))
     setSelectedDate(null)
   }
 
