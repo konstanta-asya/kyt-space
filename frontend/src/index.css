@@ -61,6 +61,10 @@ body {
   transform: scale(1.05);
 }
 
+.schedule-cell:hover {
+  border-color: var(--mantine-color-dark-3) !important;
+}
+
 /* висота фіксована на екран, а не за висотою форми — тому фото
    однакове на вході й реєстрації і не їде при прокручуванні */
 .auth-aside {

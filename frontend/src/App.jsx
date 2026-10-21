@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage.jsx'
 import AuthPage from './pages/AuthPage.jsx'
 import PlaceholderPage from './pages/PlaceholderPage.jsx'
 import RoomPage from './pages/RoomPage.jsx'
+import SchedulePage from './pages/SchedulePage.jsx'
 
 // React Router не скидає прокрутку при зміні адреси, тож нова сторінка
 // відкривалася б посередині — повертаємося на початок
@@ -82,7 +83,7 @@ function Layout() {
           <Route path="/rooms/:id" element={<RoomPage />} />
           <Route path="/login" element={<AuthPage onLogin={handleLogin} />} />
           <Route path="/register" element={<AuthPage onLogin={handleLogin} />} />
-          <Route path="/schedule" element={<PlaceholderPage title="Розклад" />} />
+          <Route path="/schedule" element={<SchedulePage />} />
           <Route path="/rules" element={<PlaceholderPage title="Правила бронювання" />} />
           <Route path="/contacts" element={<PlaceholderPage title="Контакти" />} />
           <Route path="*" element={<PlaceholderPage title="Сторінку не знайдено" text="Можливо, посилання застаріло або містить помилку." />} />
