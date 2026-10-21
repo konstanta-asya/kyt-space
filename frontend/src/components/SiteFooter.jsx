@@ -1,8 +1,6 @@
-import { Anchor, Box, Container, Divider, Group, Image, SimpleGrid, Stack, Text, Title } from '@mantine/core'
+import { Box, Container, Divider, Group, Image, SimpleGrid, Stack, Text, Title } from '@mantine/core'
 import { IconBrandTelegram, IconCalendarEvent, IconClock } from '@tabler/icons-react'
-import { Link } from 'react-router-dom'
 import logo from '../assets/logo.png'
-import { NAV_LINKS } from '../navigation.js'
 
 const SCHEDULE_INFO = [
   { icon: IconClock, text: 'Пн–Нд: з 09:00 до 21:00' },
@@ -20,7 +18,7 @@ export default function SiteFooter() {
       bg="dark.8"
     >
       <Container size="xl" py={64}>
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing={48}>
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={48}>
           <Stack gap="md">
             <Group gap="sm">
               <Image src={logo} alt="" w={32} h={32} fit="contain" />
@@ -42,17 +40,6 @@ export default function SiteFooter() {
                 <item.icon size={20} color="var(--mantine-color-kut-4)" />
                 <Text fz="sm">{item.text}</Text>
               </Group>
-            ))}
-          </Stack>
-
-          <Stack gap="md">
-            <Title order={4} fz="sm" tt="uppercase" c="dimmed">
-              Навігація
-            </Title>
-            {NAV_LINKS.map((link) => (
-              <Anchor key={link.to} component={Link} to={link.to} c="gray.3" fz="sm">
-                {link.label}
-              </Anchor>
             ))}
           </Stack>
         </SimpleGrid>
