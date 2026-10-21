@@ -11,13 +11,16 @@ import {
    getRooms, 
    getEquipment,
    getRoom,
-  getRoomEquipment, 
+   getRoomEquipment,
+   getCurrentUser,
  } from './api.js'
  import logo from './assets/logo.png'
  import room1 from './assets/room-1.jpg' 
  import room2 from './assets/room-2.jpg'
  import room3 from './assets/room-3.jpg' 
  import './App.css'
+ import LoginPage from './LoginPage.jsx'
+ import RegisterPage from './RegisterPage.jsx'
 
 const roomImages = {
   1: room1,
@@ -226,6 +229,35 @@ function Placeholder({ title }) {
   }
 
   function Layout() { 
+    const [user, setUser] = useState(null) 
+    const [authLoading, setAuthLoading] = useState( () => Boolean(sessionStorage.getItem('access_token')) )
+useEffect(() => { const token = sessionStorage.getItem('access_token')
+   if (!token) return
+  const controller = new AbortController()
+
+getCurrentUser(token, controller.signal)
+  .then((currentUser) => {
+    if (!controller.signal.aborted) {
+      setUser(currentUser)
+    }
+  })
+  .catch((err) => {
+    if (!controller.signal.aborted && err.status === 401) {
+      sessionStorage.removeItem('access_token')
+    }
+  })
+  .finally(() => {
+    if (!controller.signal.aborted) {
+      setAuthLoading(false)
+    }
+  })
+
+return () => controller.abort()
+}, [])
+function handleLogin(token, currentUser) { sessionStorage.setItem('access_token', token) 
+  setUser(currentUser) }
+function handleLogout() { sessionStorage.removeItem('access_token') 
+  setUser(null) }
    const [menuOpen, setMenuOpen] = useState(false)
  
    function closeMenu()
@@ -250,9 +282,26 @@ onClick={closeMenu}
       <Link to="/contacts">Контакти</Link>
     </nav>
 
-    <Link to="/login" className="button login-button">
+    {authLoading ? ( 
+      <span role="status">Завантаження…</span>
+     ) : user ? ( 
+     <button 
+     type="button" 
+     className="button login-button" 
+     onClick={handleLogout}
+    >
+Вийти
+</button>
+     ) : (
+      <Link
+       to="/login"
+       className="button login-button"
+       onClick={closeMenu}
+    >
       Увійти
     </Link>
+     )}
+
 
     <button
       type="button"
@@ -305,6 +354,10 @@ onClick={closeMenu}
         element={<Home showHero={false} />}
       />
       <Route
+  path="/register"
+  element={<RegisterPage />}
+/>
+      <Route
         path="/rooms/:id"
         element={<RoomPage />}
       />
@@ -322,7 +375,7 @@ onClick={closeMenu}
       />
       <Route
         path="/login"
-        element={<Placeholder title="Вхід" />}
+        element={<LoginPage onLogin={handleLogin} />}
       />
     </Routes>
   </main>

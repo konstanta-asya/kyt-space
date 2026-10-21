@@ -464,3 +464,63 @@ button:focus-visible {
   padding-left: 24px;
   margin-bottom: 24px;
 }
+
+.auth-page {
+  width: 100%;
+  max-width: 460px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 48px 20px;
+  text-align: left;
+}
+
+.auth-page h1 {
+  margin: 0 0 28px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-form label {
+  font-weight: 600;
+}
+
+.auth-form input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 46px;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.auth-form input:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.auth-form .button {
+  margin-top: 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.auth-form .button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.auth-form [role="alert"] {
+  margin: 0;
+}
+
+.auth-page > p {
+  margin-top: 24px;
+}
