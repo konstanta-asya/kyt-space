@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.modules.auth.router import router as auth_router
+from app.modules.bookings.router import router as bookings_router
 from app.modules.equipment.router import router as equipment_router
 from app.modules.rooms.router import router as rooms_router
 
@@ -27,3 +28,4 @@ def health():
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(rooms_router, prefix="/rooms", tags=["rooms"])
 app.include_router(equipment_router, prefix="/equipment", tags=["equipment"])
+app.include_router(bookings_router, prefix="/bookings", tags=["bookings"])
