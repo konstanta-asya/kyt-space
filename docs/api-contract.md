@@ -69,6 +69,32 @@
 | --- | --- | --- | --- | --- |
 | GET | `/equipment` | Список апаратури | ні | `200` → `EquipmentResponse[]` |
 
+### bookings
+Флоу клієнта: сітка → `POST /bookings` (слот тримається 5 хв, `holding`) → `submit` (`pending`)
+→ менеджер `confirm`/`reject`. Новий hold скасовує попередній hold цього ж користувача.
+
+| Метод | Шлях | Опис | Токен? | Запит | Відповідь |
+| --- | --- | --- | --- | --- | --- |
+| GET | `/bookings/slots?room_id=&date=YYYY-MM-DD` | Сітка 30-хв слотів на день | ні | — | `200` → `SlotResponse[]` |
+| POST | `/bookings` | Тримати слот 5 хв | **так** | `HoldRequest` | `201` → `BookingResponse` |
+| POST | `/bookings/{id}/submit` | Подати заявку | **так** (власник) | `SubmitRequest` | `200` → `BookingResponse` |
+| GET | `/bookings/me` | Мої бронювання | **так** | — | `200` → `BookingResponse[]` |
+| POST | `/bookings/{id}/cancel` | Скасувати | **так** (власник) | — | `200` → `BookingResponse` |
+| GET | `/bookings?status=&room_id=&date=` | Inbox / календар | manager, superadmin | — | `200` → `ManagerBookingResponse[]` |
+| POST | `/bookings/{id}/confirm` | Підтвердити | manager, superadmin | — | `200` → `ManagerBookingResponse` |
+| POST | `/bookings/{id}/reject` | Відхилити | manager, superadmin | — | `200` → `ManagerBookingResponse` |
+
+Помилки (`detail` — текст): `400` час не на сітці / поза режимом роботи / минув дедлайн 20:00,
+`403` кімната лише для кутівців, `404` кімнату/бронювання не знайдено (чуже бронювання теж `404`),
+`409` слот зайнятий або заблокований, hold протух, апаратури не вистачає, неможливий перехід статусу.
+
+### blocked-slots (manager, superadmin)
+| Метод | Шлях | Опис | Запит | Відповідь |
+| --- | --- | --- | --- | --- |
+| POST | `/blocked-slots` | Заблокувати (`room_ids: null` = усі кімнати) | `BlockRequest` | `201` → `BlockedSlotResponse[]` |
+| GET | `/blocked-slots?room_id=&date=` | Список блокувань | — | `200` → `BlockedSlotResponse[]` |
+| DELETE | `/blocked-slots/{id}` | Зняти блокування | — | `204` |
+
 ### інше
 | Метод | Шлях | Опис |
 | --- | --- | --- |
@@ -159,6 +185,58 @@
 }
 ```
 
+### Бронювання: час
+- У запитах — ISO **з часовою зоною**: `"2026-12-02T18:00:00+02:00"` (без зони → `422`).
+- Крок 30 хв (`:00`/`:30`), у межах `open_from`–`open_to` кімнати, в один день.
+- Дедлайн: на день D бронювати можна до **20:00 (Київ) дня D-1**; на сьогодні — не можна.
+- Скасування менш ніж за 24 год до початку дозволене, але `late_cancel = true` (штрафне).
+
+### SlotResponse (відповідь `/bookings/slots`)
+```json
+{ "start_time": "datetime", "end_time": "datetime", "status": "free" }  // без даних клієнта
+```
+
+### HoldRequest (тіло `POST /bookings`)
+```json
+{ "room_id": 1, "start_time": "datetime+zone", "end_time": "datetime+zone" }
+```
+
+### SubmitRequest (тіло `POST /bookings/{id}/submit`)
+```json
+{
+  "type": "rehearsal",                               // за замовчуванням rehearsal
+  "comment": "string|null",                          // ≤ 1000 символів
+  "equipment": [{ "equipment_id": 5, "quantity": 2 }] // лише portable + ok; можна []
+}
+```
+> Переносна апаратура спільна для всіх кімнат: на той самий час сума по всіх
+> бронюваннях ≤ `total_quantity`, інакше `409`.
+
+### BookingResponse
+```json
+{
+  "id": 1,
+  "room_id": 1,
+  "start_time": "datetime",
+  "end_time": "datetime",
+  "type": "rehearsal",
+  "status": "holding",
+  "hold_expires_at": "datetime|null",   // лише для holding — показати таймер
+  "comment": "string|null",
+  "created_at": "datetime",
+  "cancelled_at": "datetime|null",
+  "late_cancel": false,
+  "equipment": [{ "equipment_id": 5, "quantity": 2 }]
+}
+```
+`ManagerBookingResponse` = `BookingResponse` + `"user": { "id", "full_name", "email", "phone" }`.
+
+### BlockRequest / BlockedSlotResponse
+```json
+{ "room_ids": [1, 2] /* або null = усі */, "start_time": "datetime+zone", "end_time": "datetime+zone", "reason": "string|null" }
+{ "id": 1, "room_id": 1, "start_time": "datetime", "end_time": "datetime", "reason": "string|null", "created_by": 3 }
+```
+
 ---
 
 ## Значення (не суворий enum у схемі, але фронт має їх знати)
@@ -166,10 +244,6 @@
 - **role:** `client` | `kutivets` | `admin` | `manager` | `superadmin`
 - **equipment.type:** `stationary` | `portable`
 - **equipment.status:** `ok` | `repair` | `written_off`
-- *(майбутнє, бронювання)* **booking.type:** `rehearsal` | `podcast` | `event`
-- *(майбутнє)* **booking.status:** `holding` | `pending` | `confirmed` | `cancelled` | `rejected`
-
----
-
-## Майбутнє
-- Ендпоінти бронювання зʼявляться у спринті 3 — додати сюди, коли будуть.
+- **booking.type:** `rehearsal` | `podcast` | `event`
+- **booking.status:** `holding` | `pending` | `confirmed` | `cancelled` | `rejected`
+- **slot.status:** `free` | `busy` | `blocked`

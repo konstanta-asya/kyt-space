@@ -44,6 +44,10 @@ Seed-скрипт наповнює `rooms` і `equipment` тестовими д�
 - `GET /rooms`, `GET /rooms/{id}` — каталог кімнат
 - `GET /rooms/{id}/equipment` — апаратура конкретної кімнати
 - `GET /equipment` (опційно `?room_id=`) — список апаратури
+- `GET /bookings/slots`, `POST /bookings`, `POST /bookings/{id}/submit|cancel`, `GET /bookings/me` — бронювання
+- `GET /bookings`, `POST /bookings/{id}/confirm|reject`, `/blocked-slots` — кабінет менеджера
+
+Деталі запитів/відповідей — [docs/api-contract.md](docs/api-contract.md).
 
 ## Структура
 - `backend/app/core/`    — конфіг, підключення до БД, безпека
@@ -51,7 +55,7 @@ Seed-скрипт наповнює `rooms` і `equipment` тестовими д�
   - `auth/`      — авторизація, користувачі, ролі (Володимир)
   - `rooms/`     — каталог кімнат (Ольга)
   - `equipment/` — облік апаратури (Ольга)
-  - `bookings/`  — движок бронювання (фаза 2)
+  - `bookings/`  — движок бронювання: слоти, 5-хв hold, заявки, блокування
 - `docs/`     — документація, ER-діаграма
 - `frontend/` — фронтенд 
 

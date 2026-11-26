@@ -31,14 +31,14 @@ docker compose exec backend ruff check --fix . && docker compose exec backend ru
 
 - `backend/app/main.py` creates the FastAPI app and mounts each module's router, e.g. `app.include_router(auth_router, prefix="/auth")`. A new module is not reachable until its router is added here.
 - `backend/app/core/`: `config.py` has the pydantic-settings `Settings`, which reads `.env`. `db.py` has `engine`, `Base` and the `get_db` per-request session dependency.
-- `backend/app/modules/<domain>/` holds code organized by domain, and the domains match the team's areas of ownership: `auth`, `rooms`, `equipment` and `bookings` (phase 2). Each module follows the layout `models.py` / `schemas.py` / `service.py` / `router.py`:
+- `backend/app/modules/<domain>/` holds code organized by domain, and the domains match the team's areas of ownership: `auth`, `rooms`, `equipment` and `bookings`. Each module follows the layout `models.py` / `schemas.py` / `service.py` / `router.py`:
   - `service.py` holds the DB and business logic and raises domain exceptions (e.g. `EmailAlreadyRegistered`).
   - `router.py` translates those exceptions into `HTTPException`.
   - The module's `README.md` describes its intended scope.
 - **Auth and permissions**: other modules protect endpoints with `get_current_user` and `require_role(...)` from `app/modules/auth/dependencies.py`. A missing or invalid token gives 401, and a wrong role gives 403. JWTs (PyJWT, HS256) carry `user_id` and `role`. Roles are the `Role` str-enum in `auth/models.py` (`client`, `kutivets`, `admin`, `manager`, `superadmin`), but `users.role` is stored as a plain string column, not a DB enum. Emails are lowercased on register and on lookup.
 - **Migrations**: `alembic/env.py` takes the DB URL from `settings`, not from `alembic.ini`. It imports every module's `models` so they register on `Base.metadata`. **When you add a new models file, add its import to `env.py`**, or autogenerate won't see it. Never change the schema by hand; only through Alembic migrations.
-- `docs/er-diagram.md` is the target data model (Mermaid ER), including tables that don't exist yet: `equipment`, `bookings`, `booking_equipment`, `blocked_slots`, `admin_shifts` and `audit_logs`. It also lists the planned enum values and field semantics. Follow it when implementing new models.
-- The bookings engine (planned) needs slots, a 5-minute hold (`bookings.hold_expires_at`), and protection against race conditions using a PostgreSQL `EXCLUDE` constraint + `btree_gist`.
+- `docs/er-diagram.md` is the target data model (Mermaid ER), including tables that don't exist yet (`admin_shifts`, `audit_logs`). It also lists the planned enum values and field semantics. Follow it when implementing new models.
+- Bookings: all business rules (30-min grid, 20:00 deadline, 24h free cancel) run in `Europe/Kyiv` in `bookings/service.py`. Double booking is prevented by the `bookings_no_overlap` `EXCLUDE` constraint (needs `btree_gist`); expired 5-minute holds still count for it, so the service deletes them before inserting a new hold. Portable equipment limits are enforced with `SELECT ... FOR UPDATE` on `equipment` rows, since `EXCLUDE` can't sum quantities. `tests/conftest.py` creates `btree_gist` before `create_all`.
 
 ## Gotchas
 

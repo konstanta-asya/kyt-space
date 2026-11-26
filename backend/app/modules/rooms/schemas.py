@@ -13,5 +13,5 @@ class RoomResponse(BaseModel):
     area: float | None
     photo_url: str | None
     is_members_only: bool
-    open_from: time | None
-    open_to: time | None
+    open_from: time
+    open_to: time
