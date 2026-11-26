@@ -11,7 +11,7 @@ from sqlalchemy import and_, func, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.modules.auth.models import Role, User
+from app.modules.auth.models import Role, User, has_role
 from app.modules.bookings.models import ACTIVE_STATUSES, BlockedSlot, Booking, BookingEquipment, BookingStatus
 from app.modules.bookings.schemas import SubmitRequest
 from app.modules.equipment.models import Equipment, EquipmentStatus, EquipmentType
@@ -22,8 +22,6 @@ SLOT = timedelta(minutes=30)
 HOLD_TTL = timedelta(minutes=5)
 BOOKING_DEADLINE = time(20, 0)  # на завтра — лише до 20:00 сьогодні
 FREE_CANCEL_BEFORE = timedelta(hours=24)
-# ponytail: ролі без ієрархії, тож "кутівець і вище" перелічуємо явно
-MEMBER_ROLES = {Role.KUTIVETS.value, Role.ADMIN.value, Role.MANAGER.value, Role.SUPERADMIN.value}
 
 
 class BookingError(Exception):
@@ -165,7 +163,7 @@ def get_slots(db: Session, room_id: int, day: date) -> list[dict]:
 def hold_slot(db: Session, user: User, room_id: int, start: datetime, end: datetime) -> Booking:
     """Крок 1: займає слот на 5 хв, поки користувач заповнює заявку."""
     room = _get_room(db, room_id)
-    if room.is_members_only and user.role not in MEMBER_ROLES:
+    if room.is_members_only and not has_role(user.role, Role.KUTIVETS):
         raise MembersOnly("This room is for KUT members only")
     at = now()
     _validate_slot(room, start, end, at)

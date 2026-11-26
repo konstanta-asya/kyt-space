@@ -2,7 +2,7 @@
 
 from app.modules.auth.dependencies import get_current_user, require_role
 
-@router.post("/", dependencies=[Depends(require_role("manager"))])
+@router.post("/", dependencies=[Depends(require_role("manager"))])  # manager і вище
 """
 
 import jwt
@@ -11,7 +11,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.modules.auth.models import User
+from app.modules.auth.models import Role, User, has_role
 from app.modules.auth.service import decode_access_token
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -40,12 +40,12 @@ def get_current_user(
     return user
 
 
-def require_role(*roles: str):
-    """Пропускає лише користувачів з однією з вказаних ролей, інакше 403."""
-    allowed = {str(getattr(r, "value", r)) for r in roles}
+def require_role(minimum: str):
+    """Пропускає користувачів з роллю `minimum` або вищою (див. ієрархію в Role), інакше 403."""
+    minimum = Role(minimum)  # опечатка в ролі — ValueError одразу при старті, а не на запиті
 
     def checker(user: User = Depends(get_current_user)) -> User:
-        if user.role not in allowed:
+        if not has_role(user.role, minimum):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
         return user
 

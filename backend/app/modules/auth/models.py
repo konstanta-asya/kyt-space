@@ -7,13 +7,25 @@ from app.core.db import Base
 
 
 class Role(str, enum.Enum):
-    """Ролі користувачів (див. docs/er-diagram.md). У БД зберігаються як рядок."""
+    """Ролі користувачів (див. docs/er-diagram.md). У БД зберігаються як рядок.
+
+    Ієрархія лінійна, порядок оголошення = ранг: кожна роль має всі права нижчих
+    (адмін/звукар — теж кутівець, менеджер — теж адмін тощо).
+    """
 
     CLIENT = "client"
     KUTIVETS = "kutivets"
     ADMIN = "admin"
     MANAGER = "manager"
     SUPERADMIN = "superadmin"
+
+
+_RANK = {role.value: rank for rank, role in enumerate(Role)}
+
+
+def has_role(role: str, minimum: str) -> bool:
+    """Чи роль `role` не нижча за `minimum`. Невідома роль у БД — без прав."""
+    return _RANK.get(role, -1) >= _RANK[str(getattr(minimum, "value", minimum))]
 
 
 class User(Base):

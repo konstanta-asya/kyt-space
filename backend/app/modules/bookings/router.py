@@ -21,7 +21,7 @@ from app.modules.bookings.schemas import (
 router = APIRouter()
 blocked_router = APIRouter()
 
-manager_only = require_role(Role.MANAGER, Role.SUPERADMIN)
+manager_only = require_role(Role.MANAGER)  # manager і superadmin
 
 _STATUS_CODES = {
     service.RoomNotFound: status.HTTP_404_NOT_FOUND,
