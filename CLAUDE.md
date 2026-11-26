@@ -22,6 +22,7 @@ docker compose exec backend ruff check --fix . && docker compose exec backend ru
 
 - API: http://localhost:8000/health, Swagger: http://localhost:8000/docs
 - `DATABASE_URL` in `.env` points at host `db`. To run the backend or Alembic outside Docker, change it to `localhost:5432`.
+- A shared test DB lives on Neon (see README). Use its direct URL (no `-pooler` in the host), and never run pytest against it.
 - Lint/format: ruff, config in `backend/pyproject.toml`. Run it before committing. Without Docker: `cd backend && uvx ruff@0.16.9 check .`.
 - CI (`.github/workflows/ci.yml`) runs `ruff check`, `ruff format --check` and pytest (against a Postgres service) on every PR. The ruff version is pinned to 0.16.9 in `requirements.txt`, CI and `.claude/hooks/`; bump it everywhere at once.
 - A Claude Code hook (`.claude/settings.json`) auto-runs `ruff format` + import sorting on every edited `.py` file.

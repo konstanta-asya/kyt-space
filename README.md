@@ -16,6 +16,20 @@ docker compose up --build
 - API:     http://localhost:8000/health
 - Swagger: http://localhost:8000/docs
 
+## База даних: локально або Neon
+За замовчуванням бекенд ходить у Postgres з `docker compose` (`DATABASE_URL` з `.env.example`).
+
+Для спільного тестування є БД на [Neon](https://neon.com) (Free, регіон Frankfurt),
+створена через Vercel → Storage → Neon. Щоб підключитись:
+1. У Vercel відкрий базу → вкладка **.env.local** → скопіюй `DATABASE_URL_UNPOOLED`
+   (пряма адреса, без `-pooler` у хості — з нею без сюрпризів працює Alembic).
+2. Встав її в `backend/.env` як `DATABASE_URL=...` (локальну адресу закоментуй).
+   `.env` у `.gitignore` — у чати й коміти пароль не кидаємо.
+3. `docker compose up -d --force-recreate backend` — бекенд підхопить нову адресу.
+
+> **pytest — тільки на локальній БД.** Тести створюють поруч базу `<db>_test` і
+> видаляють у ній усі таблиці; на Neon це зайве навантаження на free-ліміти.
+
 ## Міграції та тестові дані
 ```bash
 docker compose exec backend alembic upgrade head
