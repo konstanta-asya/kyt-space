@@ -14,6 +14,8 @@ from app.core.config import settings
 from app.core.db import Base, get_db
 from app.main import app
 from app.modules.auth import models as _auth_models  # noqa: F401 — реєструє таблиці в Base
+from app.modules.bookings import models as _bookings_models  # noqa: F401
+from app.modules.equipment import models as _equipment_models  # noqa: F401
 from app.modules.rooms import models as _rooms_models  # noqa: F401
 
 TEST_DB_URL = make_url(settings.database_url).set(database=f"{make_url(settings.database_url).database}_test")
@@ -31,6 +33,8 @@ def engine():
     admin.dispose()
 
     engine = create_engine(TEST_DB_URL)
+    with engine.begin() as conn:
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS btree_gist"))  # для EXCLUDE у bookings
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
     yield engine

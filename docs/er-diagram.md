@@ -29,8 +29,8 @@ erDiagram
         numeric area
         string photo_url
         bool is_members_only
-        time open_from
-        time open_to
+        time open_from "NOT NULL, 09:00"
+        time open_to "NOT NULL, 21:00"
     }
     equipment {
         int id PK
@@ -44,25 +44,30 @@ erDiagram
         int id PK
         int user_id FK
         int room_id FK
-        timestamp start_time
-        timestamp end_time
+        timestamptz start_time
+        timestamptz end_time
         enum type
         enum status
-        timestamp hold_expires_at
-        timestamp created_at
+        timestamptz hold_expires_at
+        text comment
+        timestamptz created_at
+        timestamptz cancelled_at
+        bool late_cancel
+        int reviewed_by FK
     }
     booking_equipment {
-        int booking_id FK
-        int equipment_id FK
+        int booking_id PK,FK
+        int equipment_id PK,FK
         int quantity
     }
     blocked_slots {
         int id PK
         int room_id FK
-        timestamp start_time
-        timestamp end_time
+        timestamptz start_time
+        timestamptz end_time
         string reason
         int created_by FK
+        timestamptz created_at
     }
     admin_shifts {
         int id PK
@@ -100,4 +105,8 @@ erDiagram
 - `bookings.type` — `rehearsal` | `podcast` | `event`
 - `bookings.status` — `holding` | `pending` | `confirmed` | `cancelled` | `rejected`
 - `bookings.hold_expires_at` — час протухання 5-хв lock
-- `blocked_slots.room_id` — nullable; порожнє = блокуються всі кімнати
+- `bookings` — `EXCLUDE USING gist (room_id WITH =, tstzrange(start_time, end_time) WITH &&) WHERE status IN ('holding','pending','confirmed')` (потрібне розширення `btree_gist`). Прострочені hold сервіс видаляє перед створенням нового
+- `bookings.late_cancel` — скасовано менш ніж за 24 год до початку (штрафне)
+- `bookings.reviewed_by` — менеджер, що підтвердив/відхилив заявку
+- `blocked_slots.room_id` — NOT NULL; масове блокування = по рядку на кожну кімнату
+- Усі часи — `timestamptz`; бізнес-правила (дедлайн 20:00, режим роботи) рахуються в `Europe/Kyiv`

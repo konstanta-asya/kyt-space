@@ -13,5 +13,5 @@ class Room(Base):
     area = Column(Numeric)
     photo_url = Column(String(500))
     is_members_only = Column(Boolean, nullable=False, default=False)
-    open_from = Column(Time)
-    open_to = Column(Time)
+    open_from = Column(Time, nullable=False, server_default="09:00")
+    open_to = Column(Time, nullable=False, server_default="21:00")
