@@ -242,6 +242,8 @@
 ## Значення (не суворий enum у схемі, але фронт має їх знати)
 
 - **role:** `client` | `kutivets` | `admin` | `manager` | `superadmin`
+  — лінійна ієрархія: кожна роль має всі права попередніх (напр. `manager` може все, що `kutivets`).
+  Фронт показує розділи за принципом «роль ≥ потрібної», а не точним збігом.
 - **equipment.type:** `stationary` | `portable`
 - **equipment.status:** `ok` | `repair` | `written_off`
 - **booking.type:** `rehearsal` | `podcast` | `event`

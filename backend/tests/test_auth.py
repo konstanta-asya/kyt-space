@@ -146,7 +146,7 @@ def role_routes():
     def manager_only():
         return {"ok": True}
 
-    @app.get("/_test/client", dependencies=[Depends(require_role(Role.CLIENT, Role.ADMIN))])
+    @app.get("/_test/client", dependencies=[Depends(require_role(Role.CLIENT))])
     def client_or_admin():
         return {"ok": True}
 
